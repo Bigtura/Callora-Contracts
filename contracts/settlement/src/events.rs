@@ -23,7 +23,6 @@
 //! 3. Add a snapshot test in the `#[cfg(test)] mod tests` block asserting
 //!    byte-identity of the topic string.
 //! 4. Update `EVENT_SCHEMA.md` and `docs/EVENT_TOPICS.md`.
-//! 5. Add a corresponding `emit_<name>` function for the new event.
 
 use soroban_sdk::{Address, BytesN, Env, Symbol};
 
@@ -33,7 +32,6 @@ use crate::types::{
     DepositEvent, DeveloperClaimWindowChanged, DeveloperForceCreditedEvent, DeveloperWithdrawEvent,
     GlobalPool, PaymentReceivedEvent, VaultAcceptedEvent, VaultProposedEvent,
 };
-use crate::types::VaultRotationCancelledEvent;
 
 // ─── Topic constructors ──────────────────────────────────────────────────────
 
@@ -559,24 +557,21 @@ pub fn emit_vault_accepted(env: &Env, new_vault: &Address, payload: VaultAccepte
 /// Emit `"vault_rotation_cancelled"` when the admin cancels a pending vault
 /// rotation proposal.
 ///
-/// **What**: Publishes an event when a pending vault rotation is aborted by the admin.
+/// **What**: Publishes an event when a pending vault proposal is aborted.
 ///
-/// **How**: Calls `env.events().publish()` with topic `(vault_rotation_cancelled, admin)` and payload `VaultRotationCancelledEvent`.
+/// **How**: Calls `env.events().publish()` with topic `(vault_rotation_cancelled, admin)` and payload `dropped_vault`.
 ///
-/// **Why**: Provides an audit trail showing the admin intended to abort the rotation.
+/// **Why**: Provides an audit trail showing the admin intended to abort the
+/// pending vault rotation and records the dropped vault address.
 ///
 /// # Arguments
 /// * `env` - Soroban environment handle.
-/// * `admin` - Admin address cancelling the rotation.
-/// * `payload` - Structured vault rotation cancellation details.
-pub fn emit_vault_rotation_cancelled(
-    env: &Env,
-    admin: &Address,
-    payload: VaultRotationCancelledEvent,
-) {
+/// * `admin` - Admin address cancelling the proposal.
+/// * `dropped_vault` - Address of the vault whose proposal was dropped.
+pub fn emit_vault_rotation_cancelled(env: &Env, admin: &Address, dropped_vault: &Address) {
     env.events().publish(
         (event_vault_rotation_cancelled(env), admin.clone()),
-        payload,
+        dropped_vault.clone(),
     );
 }
 

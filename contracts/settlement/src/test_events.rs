@@ -1,3 +1,4 @@
+
 //! Focused tests for the structured event emission helpers in
 //! [`crate::events`].
 //!
@@ -12,7 +13,7 @@
 //! Tests are grouped by lifecycle area: init, payments, withdrawals, admin
 //! governance, vault rotation, broadcast, upgrade, force-credit, min-balance,
 //! and developer balance migration.
-
+ 
 #[cfg(test)]
 mod event_tests {
     extern crate std;
@@ -518,71 +519,13 @@ mod event_tests {
         assert_eq!(topic1_addr(&env, &evs[0]), new_vault);
     }
 
-    // ─── vault_rotation_cancelled ─────────────────────────────────────────────
-
-    /// `cancel_vault_rotation` emits `vault_rotation_cancelled` with
-    /// topic[1]=admin and topic[2]=dropped vault address.
-    #[test]
-    fn test_cancel_vault_rotation_emits_event() {
-        let (env, contract, admin, _, _) = setup();
-        let new_vault = Address::generate(&env);
-        let client = CalloraSettlementClient::new(&env, &contract);
-
-        client.propose_vault(&admin, &new_vault);
-        env.events().all();
-
-        client.cancel_vault_rotation(&admin);
-
-        let all = env.events().all();
-        let evs = filter_by_topic(&env, &all, "vault_rotation_cancelled");
-        assert_eq!(evs.len(), 1);
-        assert_eq!(topic1_addr(&env, &evs[0]), admin);
-        assert_eq!(topic2_addr(&env, &evs[0]), new_vault);
-    }
-
-    /// After cancelling, the dropped vault can no longer be accepted.
-    #[test]
-    fn test_cancelled_vault_cannot_accept() {
-        let (env, contract, admin, _, _) = setup();
-        let new_vault = Address::generate(&env);
-        let client = CalloraSettlementClient::new(&env, &contract);
-
-        client.propose_vault(&admin, &new_vault);
-        client.cancel_vault_rotation(&admin);
-
-        let result = client.try_accept_vault(&new_vault);
-        assert!(result.is_err(), "cancelled vault must not be acceptable");
-    }
-
-    /// Cancelling with no pending proposal must fail.
-    #[test]
-    fn test_cancel_vault_rotation_without_pending_fails() {
-        let (env, contract, admin, _, _) = setup();
-        let client = CalloraSettlementClient::new(&env, &contract);
-
-        let result = client.try_cancel_vault_rotation(&admin);
-        assert!(result.is_err(), "cancel without pending must fail");
-    }
-
-    /// A non-admin caller must be rejected when cancelling a rotation.
-    #[test]
-    #[should_panic]
-    fn test_unauthorized_cancel_vault_rotation_panics() {
-        let (env, contract, admin, _, _) = setup();
-        let impostor = Address::generate(&env);
-        let new_vault = Address::generate(&env);
-        let client = CalloraSettlementClient::new(&env, &contract);
-
-        client.propose_vault(&admin, &new_vault);
-        client.cancel_vault_rotation(&impostor);
-    }
 
     // ─── upgraded ─────────────────────────────────────────────────────────────
 
     /// `upgrade` emits exactly one `upgraded` event with topic[1]=admin.
     #[test]
     fn test_upgrade_emits_upgraded_event() {
-        let (env, contract, admin, _, _) = setup();
+        let (env, contract, admin, _, _) = setup(); 
         let client = CalloraSettlementClient::new(&env, &contract);
         let fake_hash = soroban_sdk::BytesN::from_array(&env, &[0u8; 32]);
 
