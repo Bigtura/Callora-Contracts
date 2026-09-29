@@ -23,6 +23,7 @@
 //! 3. Add a snapshot test in the `#[cfg(test)] mod tests` block asserting
 //!    byte-identity of the topic string.
 //! 4. Update `EVENT_SCHEMA.md` and `docs/EVENT_TOPICS.md`.
+//! 5. Add a corresponding `emit_<name>` function for the new event.
 
 use soroban_sdk::{Address, BytesN, Env, Symbol};
 
@@ -30,8 +31,9 @@ use crate::limits::MinBalanceChanged;
 use crate::types::{
     AdminBroadcast, AdminMigrationEvent, BalanceCreditedEvent, DailyWithdrawCapChanged,
     DepositEvent, DeveloperClaimWindowChanged, DeveloperForceCreditedEvent, DeveloperWithdrawEvent,
-    GlobalPool, PaymentReceivedEvent, VaultAcceptedEvent, VaultCancelledEvent, VaultProposedEvent,
+    GlobalPool, PaymentReceivedEvent, VaultAcceptedEvent, VaultProposedEvent,
 };
+use crate::types::VaultRotationCancelledEvent;
 
 // ─── Topic constructors ──────────────────────────────────────────────────────
 
@@ -557,20 +559,20 @@ pub fn emit_vault_accepted(env: &Env, new_vault: &Address, payload: VaultAccepte
 /// Emit `"vault_rotation_cancelled"` when the admin cancels a pending vault
 /// rotation proposal.
 ///
-/// **What**: Publishes an event when a pending vault rotation proposal is aborted.
+/// **What**: Publishes an event when a pending vault rotation is aborted by the admin.
 ///
-/// **How**: Calls `env.events().publish()` with topic `(vault_rotation_cancelled, admin)` and payload `VaultCancelledEvent`.
+/// **How**: Calls `env.events().publish()` with topic `(vault_rotation_cancelled, admin)` and payload `VaultRotationCancelledEvent`.
 ///
-/// **Why**: Provides an audit trail showing the admin intended to abort a pending vault proposal.
+/// **Why**: Provides an audit trail showing the admin intended to abort the rotation.
 ///
 /// # Arguments
 /// * `env` - Soroban environment handle.
-/// * `admin` - Admin address cancelling the proposal.
-/// * `payload` - Structured vault cancellation details including the dropped address.
+/// * `admin` - Admin address cancelling the rotation.
+/// * `payload` - Structured vault rotation cancellation details.
 pub fn emit_vault_rotation_cancelled(
     env: &Env,
     admin: &Address,
-    payload: VaultCancelledEvent,
+    payload: VaultRotationCancelledEvent,
 ) {
     env.events().publish(
         (event_vault_rotation_cancelled(env), admin.clone()),
